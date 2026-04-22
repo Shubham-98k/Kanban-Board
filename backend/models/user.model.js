@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema({
     },
     profileImageUrl:{
         type: String,
-        default:"https://www.google.com/url?sa=t&source=web&rct=j&url=https%3A%2F%2Fwww.freepik.com%2Ficon%2Fuser_3177440&ved=0CBYQjRxqFwoTCOiZlvThgZQDFQAAAAAdAAAAABAG&opi=89978449",
+        default:"https://e7.pngegg.com/pngimages/161/384/png-clipart-johnson-legal-pc-attorneys-at-law-lawyer-sales-corporation-service-login-button-blue-face.png",
     },
     role:{
         type: String,

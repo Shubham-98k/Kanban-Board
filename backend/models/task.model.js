@@ -22,6 +22,10 @@ const taskSchema = new mongoose.Schema({
         type: Date,
         required:true,
     },
+    progress: {
+        type: Number,
+        default: 0
+    },
     assignTo:[
         { 
         type: mongoose.Schema.Types.ObjectId,
@@ -40,10 +44,7 @@ const taskSchema = new mongoose.Schema({
       },
     ],
     todoChecklist: [todoSchema],
-    progress: {
-        type: Number,
-        default: 0
-    },
+    
 },{timestamps:true}
 )
 

@@ -2,6 +2,7 @@ import express from "express"
 import cors from "cors"
 import dotenv from "dotenv"
 import mongoose from "mongoose"
+import authRoutes from "./routes/auth.route.js"
 
 dotenv.config()
 
@@ -25,6 +26,10 @@ app.use(cors(
 /* Middleware to handle JSON object in the req body */
 app.use(express.json())
 
+
 app.listen(5175,() => {
     console.log("server started on 5175")
 })
+
+// Middleware for singup 
+app.use("/api/auth", authRoutes)
