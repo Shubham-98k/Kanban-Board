@@ -33,3 +33,10 @@ app.listen(5175,() => {
 
 // Middleware for singup 
 app.use("/api/auth", authRoutes)
+
+//Middleware to handle erros
+app.use((err,req,res,next) =>{
+const statusCode = err.statusCode || 500
+const message = err.message || "Internal Server Error"
+res.status(statusCode).json({success:false, statusCode, message})
+})
