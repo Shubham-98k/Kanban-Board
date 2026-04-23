@@ -27,15 +27,15 @@ app.use(cors(
 /* Middleware to handle JSON object in the req body */
 app.use(express.json())
 
-//configure cookieParser
-app.use(cookieParser())
-
 
 app.listen(5175,() => {
     console.log("server started on 5175")
 })
 
-// Middleware for singup 
+//configure cookieParser
+app.use(cookieParser())
+
+// Middleware for auth
 app.use("/api/auth", authRoutes)
 
 //Middleware to handle erros

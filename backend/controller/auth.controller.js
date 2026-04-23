@@ -71,9 +71,27 @@ export const signin = async (req, res, next) => {
         //send everything to user expect password, so destructure that and send only rest
         const {password:pass,...rest} = validUser._doc
 
-        res.status(200).cookie("access_token", token, {httpOnly:true}).json(rest)
+        res.status(200).cookie("access_token", token, { httpOnly:true }).json(rest)
 
     }catch(error){
         next(error)
     } 
+}
+
+export const userProfile = async (req, res, next) => {
+try{
+const user = await User.findById(req.user.id)
+
+if(!user){
+    return next(errorhandler(404,"User does not exist"))
+}
+
+//if user exist then we will return everything except password
+const {password:pass,...rest} = user._doc
+
+res.status(200).json(rest)
+
+}catch(error){
+    next(error)
+}
 }
