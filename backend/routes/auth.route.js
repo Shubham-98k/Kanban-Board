@@ -1,6 +1,7 @@
 import express from "express"
-import { signin, signup, updateUserProfile, userProfile } from "../controller/auth.controller.js"
+import { signin, signup, updateUserProfile, uploadImage, userProfile } from "../controller/auth.controller.js"
 import { adminOnly, verifyToken } from "../utils/verifyUser.js"
+import upload from "../utils/multer.js"
 
 const router = express.Router()
 
@@ -12,5 +13,6 @@ router.get("/user-profile", verifyToken , adminOnly, userProfile)
 
 router.put("/update-profile", verifyToken , updateUserProfile)
 
+router.put("/upload-image", upload.single("image"), uploadImage)
 
 export default router
