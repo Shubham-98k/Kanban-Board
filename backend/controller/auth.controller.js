@@ -66,7 +66,7 @@ export const signin = async (req, res, next) => {
 
         //Creating session
         //Create a JWT token
-        const token = jwt.sign({id: validUser._id},process.env.JWT_SECRET)
+        const token = jwt.sign({id: validUser._id, role: validUser.role},process.env.JWT_SECRET)
 
         //send everything to user expect password, so destructure that and send only rest
         const {password:pass,...rest} = validUser._doc
@@ -131,14 +131,16 @@ export const updateUserProfile = async (req,res,next) =>{
 
 export const uploadImage = async (req,res,next)=>{
     try{
+        //if no file is there in req body
         if(!req.file){
             return next(errorhandler(400,"No file uploaded"))
         }
 
-        const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${
-            req.file.filename
-        }`
+        //if file is there then 
+        //Make Url using js
+        const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`
 
+        //send user back the url
         res.status(200).json({imageUrl})
 
     }catch(error){
