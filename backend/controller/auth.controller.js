@@ -95,3 +95,35 @@ res.status(200).json(rest)
     next(error)
 }
 }
+
+export const updateUserProfile = async (req,res,next) =>{
+    try{
+
+        const user = await User.findById(req.user.id)
+
+        if(!user){
+            return next(errorhandler(404, "User not found"))
+        }
+
+        //if we get a new name with a req if will change that else we will keep the same user name in the database 
+        user.name = req.body.name || user.name
+
+         user.email = req.body.email || user.email
+
+        // if we get to chnage the password then we will have to first hash it and then store it 
+         if(req.body.password){
+            const hashedpassword = bcryptjs.hashSync(req.body.password,10)
+            user.password = hashedpassword 
+         }
+         
+         // then save the changes in the database
+         const updateUser = await user.save()
+
+         const {password: pass, ...rest} = user._doc
+        
+         res.status(200).json(rest)
+
+    }catch(error){
+        next(error)
+    }
+}
