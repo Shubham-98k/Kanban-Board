@@ -25,7 +25,7 @@ export const getUsers = async (req, res, next) =>{
                 })
                 return {
                     //already excluded password from user object
-                ...users._doc,
+                ...user._doc,
                 pendingTasks,
                 inProgressTasks,
                 completedTasks
