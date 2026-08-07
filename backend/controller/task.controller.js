@@ -189,19 +189,31 @@ export const deleteTask = async (req, res, next) => {
 }
 
 export const getDashboardData = async (req, res, next) => {
+  //one controller for both admin and user
   try {
-    // Fetch statistics
-    const totalTasks = await Task.countDocuments()
-    const pendingTasks = await Task.countDocuments({ status: "Pending" })
-    const completedTasks = await Task.countDocuments({ status: "Completed" })
+    const isAdmin = req.user.role === "admin";
+    
+    // 1. DYNAMIC SECURITY FILTER
+    // If Admin: match everything {}. If User: restrict to tasks assigned to them.
+    const userRoleFilter = isAdmin ? {} : { assignedTo: req.user.id };
+
+    // 2. Fetch summary counters using the security filter
+    const totalTasks = await Task.countDocuments(userRoleFilter)
+    const pendingTasks = await Task.countDocuments({ ...userRoleFilter, status: "Pending" })
+    const completedTasks = await Task.countDocuments({ ...userRoleFilter, status: "Completed" })
     const overdueTasks = await Task.countDocuments({
+      ...userRoleFilter,
       status: { $ne: "Completed" },
       dueDate: { $lt: new Date() },
     })
 
     const taskStatuses = ["Pending", "In Progress", "Completed"]
 
+    // 3. Circle Chart Aggregation with Security Filter
     const taskDistributionRaw = await Task.aggregate([
+      {
+        $match: userRoleFilter // <-- CRUCIAL: Filters out other users' tasks before grouping!
+      },
       {
         $group: {
           _id: "$status",
@@ -211,115 +223,20 @@ export const getDashboardData = async (req, res, next) => {
     ])
 
     const taskDistribution = taskStatuses.reduce((acc, status) => {
-      const formattedKey = status.replace(/\s+/g, "") //remove spaces for response keys
-
-      acc[formattedKey] = taskDistributionRaw.find((item) => item._id === status)?.count || 0
-
-      return acc
-    }, {})
-
-    taskDistribution["All"] = totalTasks
-
-    const taskPriorities = ["Low", "Medium", "High"]
-
-    const taskPriorityLevelRaw = await Task.aggregate([
-      {
-        $group: {
-          _id: "$priority",
-          count: { $sum: 1 },
-        },
-      },
-    ])
-
-    const taskPriorityLevel = taskPriorities.reduce((acc, priority) => {
-      acc[priority] =
-        taskPriorityLevelRaw.find((item) => item._id === priority)?.count || 0
-
-      return acc
-    }, {})
-
-    // Fetch recent 10 tasks
-    const recentTasks = await Task.find()
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .select("title status priority dueDate createdAt")
-
-    res.status(200).json({
-      statistics: {
-        totalTasks,
-        pendingTasks,
-        completedTasks,
-        overdueTasks,
-      },
-      charts: {
-        taskDistribution,
-        taskPriorityLevel,
-      },
-
-      recentTasks,
-    })
-  } catch (error) {
-    next(error)
-  }
-}
-
-export const userDashboardData = async (req, res, next) => {
-  try {
-    const userId = req.user.id
-
-    // console.log(userId)
-
-    // Convert userId to ObjectId for proper matching
-    const userObjectId = new mongoose.Types.ObjectId(userId)
-
-    // console.log(userObjectId)
-
-    // fetch statistics for user-specific tasks
-    const totalTasks = await Task.countDocuments({ assignedTo: userId })
-    const pendingTasks = await Task.countDocuments({
-      assignedTo: userId,
-      status: "Pending",
-    })
-    const completedTasks = await Task.countDocuments({
-      assignedTo: userId,
-      status: "Completed",
-    })
-    const overdueTasks = await Task.countDocuments({
-      assignedTo: userId,
-      status: { $ne: "Completed" },
-      dueDate: { $lt: new Date() },
-    })
-
-    // Task distribution by status
-    const taskStatuses = ["Pending", "In Progress", "Completed"]
-
-    const taskDistributionRaw = await Task.aggregate([
-      {
-        $match: { assignedTo: userObjectId },
-      },
-      {
-        $group: { _id: "$status", count: { $sum: 1 } },
-      },
-    ])
-
-    // console.log(taskDistributionRaw)
-
-    const taskDistribution = taskStatuses.reduce((acc, status) => {
       const formattedKey = status.replace(/\s+/g, "")
-
-      acc[formattedKey] =
-        taskDistributionRaw.find((item) => item._id === status)?.count || 0
-
+      acc[formattedKey] = taskDistributionRaw.find((item) => item._id === status)?.count || 0
       return acc
     }, {})
 
     taskDistribution["All"] = totalTasks
 
-    // Task distribution by priority
     const taskPriorities = ["Low", "Medium", "High"]
 
+    // 4. Bar Chart Aggregation with Security Filter
     const taskPriorityLevelRaw = await Task.aggregate([
-      { $match: { assignedTo: userObjectId } },
+      {
+        $match: userRoleFilter // <-- CRUCIAL: Filters out other users' tasks before grouping!
+      },
       {
         $group: {
           _id: "$priority",
@@ -329,13 +246,12 @@ export const userDashboardData = async (req, res, next) => {
     ])
 
     const taskPriorityLevel = taskPriorities.reduce((acc, priority) => {
-      acc[priority] =
-        taskPriorityLevelRaw.find((item) => item._id === priority)?.count || 0
-
+      acc[priority] = taskPriorityLevelRaw.find((item) => item._id === priority)?.count || 0
       return acc
     }, {})
 
-    const recentTasks = await Task.find({ assignedTo: userObjectId })
+    // 5. Fetch recent 10 tasks matching the user's role permissions
+    const recentTasks = await Task.find(userRoleFilter)
       .sort({ createdAt: -1 })
       .limit(10)
       .select("title status priority dueDate createdAt")
@@ -357,4 +273,3 @@ export const userDashboardData = async (req, res, next) => {
     next(error)
   }
 }
-
