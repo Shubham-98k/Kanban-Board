@@ -12,7 +12,7 @@ router.get("/dashboard-data", verifyToken, getDashboardData)
 
 router.get("/:id", verifyToken, getTaskById)
 
-router.put("/:id", verifyToken, updateTask)
+router.put("/:id", verifyToken, updateTask) //user bhi update kr dega ayse toh without adminOnly
 
 router.delete("/:id", verifyToken, adminOnly, deleteTask)
 
