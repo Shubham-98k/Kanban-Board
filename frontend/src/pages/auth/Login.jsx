@@ -3,13 +3,18 @@ import AuthLayout from '../../components/layouts/AuthLayout.jsx'
 import { validateEmail } from '../../utils/helper.js'
 import axiosInstance from '../../utils/axioInstance.js'
 import { useNavigate } from "react-router-dom"
-
+import { useDispatch, useSelector } from "react-redux";
+import { signInStart, signInSuccess, signInFailure } from "../../redux/slice/userSlice.js";
 
 export const Login = () => {
 const navigate = useNavigate()
 const [email,setEmail] = useState("")
 const [password,setPassword] = useState("")
 const [error, setError] = useState(null)
+
+const dispatch = useDispatch();
+
+const { currentUser, loading, error: reduxError} = useSelector((state) => state.user);
 
 const handleSubmit = async (e) => {
     e.preventDefault() // Stopped page refresh!
@@ -29,6 +34,9 @@ const handleSubmit = async (e) => {
     console.log("Ready to send data to server:", { email, password })
 
     try {
+      // 1. Tell Redux we started logging in
+    dispatch(signInStart());
+
       const response = await axiosInstance.post( 
       "http://localhost:5175/api/auth/sign-in", 
       { email, password }, 
@@ -36,6 +44,10 @@ const handleSubmit = async (e) => {
       ) 
 
         console.log(response.data) // Test server response
+
+        // 2. Tell Redux login succeeded and hand it the user data
+      dispatch(signInSuccess(response.data));
+
       // Redirect based on server response
         navigate("/user/dashboard")
       
@@ -44,8 +56,12 @@ const handleSubmit = async (e) => {
       // Handle server error response
       if (error.message) {
         setError(error.message)
+        // 3. Tell Redux it failed
+      dispatch(signInFailure(error.message));
       } else {
         setError("Something went wrong. Please try again!")
+        // 3. Tell Redux it failed
+      dispatch(signInFailure(error.message));
       }
     }
   }
