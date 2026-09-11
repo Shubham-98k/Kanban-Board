@@ -1,3 +1,4 @@
+import mongoose from "mongoose"
 import Task from "../models/task.model.js"
 import { errorhandler } from "../utils/error.js"
 
@@ -195,7 +196,7 @@ export const getDashboardData = async (req, res, next) => {
     
     // 1. DYNAMIC SECURITY FILTER
     // If Admin: match everything {}. If User: restrict to tasks assigned to them.
-    const userRoleFilter = isAdmin ? {} : { assignedTo: req.user.id };
+    const userRoleFilter = isAdmin ? {} : { assignedTo: new mongoose.Types.ObjectId(req.user.id) };
 
     // 2. Fetch summary counters using the security filter
     const totalTasks = await Task.countDocuments(userRoleFilter)
