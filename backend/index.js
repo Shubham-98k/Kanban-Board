@@ -20,7 +20,7 @@ const app = express()
 /* Middleware to handle CORS */
 app.use(cors(
     {
-        origin: process.env.FRONT_END_URL || "http://localhost:5173",
+        origin: process.env.FRONT_END_URL || "https://task-management-system-shubham.vercel.app",
         credentials: true, 
         methods: ["GET", "POST", "PUT","DELETE"],
         allowedHeaders: ["Content-Type", "Authorization"],
